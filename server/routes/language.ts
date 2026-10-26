@@ -1,4 +1,3 @@
-import createError from 'http-errors'
 import { Router } from 'express'
 import { Services } from '../services'
 import debitCardRouter from './debit-card'
@@ -26,8 +25,6 @@ export default function routes(services: Services): Router {
 
   router.get(
     paths.PAYMENT_CHOICE,
-    // TEMPORARY: forced 404 for demo
-    (_req, _res, next) => next(createError(404)),
     auditPageViewRequest({ services, page: Page.PAYMENT_CHOICE }),
     paymentChoiceGetHandler(services.sendMoneyToPrisonerService),
   )

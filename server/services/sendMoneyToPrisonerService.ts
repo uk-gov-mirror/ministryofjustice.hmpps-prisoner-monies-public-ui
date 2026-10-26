@@ -1,6 +1,6 @@
 const validTestPrisoner = {
   prisonerNumber: 'A0076EA',
-  prisonerDOB: '01-01-1999',
+  prisonerDOB: '1999-01-01',
 } as const
 
 export interface PaymentServiceAvailability {

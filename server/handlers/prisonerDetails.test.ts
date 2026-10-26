@@ -32,8 +32,7 @@ const validFormBody: PrisonerDetailsRequestBody = {
   prisoner_number: 'A1234BC',
 }
 
-const expectedPrisonerDOB = `${validFormBody.prisoner_dob_0}-${validFormBody.prisoner_dob_1}-${validFormBody.prisoner_dob_2}`
-
+const expectedPrisonerDOB = `${validFormBody.prisoner_dob_2}-${validFormBody.prisoner_dob_1}-${validFormBody.prisoner_dob_0}`
 describe('prisonerDetailsGetHandler', () => {
   it('renders the prisoner details page with empty form values and errors', () => {
     const req = {} as unknown as Request
@@ -282,7 +281,7 @@ describe('prisonerDetailsPostHandler', () => {
 
       expect(sendMoneyToPrisonerService.isPrisonerKnown).toHaveBeenCalledWith(
         unpaddedDobFormBody.prisoner_number,
-        '01-01-1999',
+        '1999-01-01',
       )
     })
 
@@ -299,7 +298,7 @@ describe('prisonerDetailsPostHandler', () => {
 
       expect(sendMoneyToPrisonerService.isPrisonerKnown).toHaveBeenCalledWith(
         unpaddedDobFormBody.prisoner_number,
-        '21-10-1980',
+        '1980-10-21',
       )
     })
   })

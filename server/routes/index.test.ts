@@ -400,6 +400,31 @@ describe.each([['en-gb'], ['cy']])('POST /%s/debit-card/details', locale => {
         })
       })
   })
+
+  it('audits the event but does not include sensitive prisoner details', () => {
+    sendMoneyToPrisonerService.isPrisonerKnown.mockResolvedValue(true)
+
+    return request(app)
+      .post(`/${locale}/debit-card/details`)
+      .type('form')
+      .send({
+        prisoner_name: 'John Smith',
+        prisoner_dob_0: '1',
+        prisoner_dob_1: '1',
+        prisoner_dob_2: '1990',
+        prisoner_number: 'A0076EA',
+      })
+      .expect(302)
+      .expect(() => {
+        expect(auditService.logAuditEvent).toHaveBeenCalledWith({
+          correlationId: '4d0fd4da-ecc1-454d-8308-cdee6b8b91f7',
+          who: ANONYMOUS_USER,
+          what: AuditEvent.PRISONER_DETAILS_EVENT_TO_VALIDATE,
+          subjectType: 'NOT_APPLICABLE',
+          details: {},
+        })
+      })
+  })
 })
 
 describe.each([['en-gb'], ['cy']])('GET /%s/debit-card/amount', locale => {

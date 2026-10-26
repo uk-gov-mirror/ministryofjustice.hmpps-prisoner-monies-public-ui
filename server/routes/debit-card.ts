@@ -18,7 +18,15 @@ export default function routes(services: Services): Router {
     prisonerDetailsGetHandler,
   )
 
-  router.post(debitCardPaths.PRISONER_DETAILS, prisonerDetailsPostHandler(services.sendMoneyToPrisonerService))
+  router.post(
+    debitCardPaths.PRISONER_DETAILS,
+    auditPageEventRequest({
+      services,
+      whatEvent: AuditEvent.PRISONER_DETAILS_EVENT_TO_VALIDATE,
+      getEventDetails: _req => ({}),
+    }),
+    prisonerDetailsPostHandler(services.sendMoneyToPrisonerService),
+  )
 
   router.get(
     debitCardPaths.PAYMENT_AMOUNT,

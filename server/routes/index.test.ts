@@ -1,13 +1,14 @@
 import type { Express } from 'express'
 import { AuditService } from '@ministryofjustice/hmpps-audit-client'
 import request from 'supertest'
+import i18next from 'i18next'
 import { appWithAllRoutes, user } from './testutils/appSetup'
 import ExampleService from '../services/exampleService'
 import ExampleApiClient from '../data/exampleApiClient'
 import SendMoneyToPrisonerService from '../services/sendMoneyToPrisonerService'
 import ANONYMOUS_USER from '../constants/audit'
 import AuditEvent from '../constants/events'
-import i18next from '../i18n/i18n'
+import Page from '../constants/pages'
 
 jest.mock('@ministryofjustice/hmpps-audit-client')
 jest.mock('../services/exampleService')
@@ -66,6 +67,69 @@ describe('GET /payment-choice', () => {
   })
 })
 
+describe.each([
+  [
+    'en-gb',
+    'Pay now by debit card',
+    'Continue',
+    'You can complete your payment here using Mastercard, Visa and Maestro',
+  ],
+  [
+    'cy',
+    'Talu nawr gyda cherdyn debyd',
+    'Parhau',
+    'You can complete your payment here using Mastercard, Visa and Maestro',
+  ],
+])('GET /%s/payment-choice', (locale, heading, continueText, body) => {
+  it('renders the page content in the requested language', () => {
+    sendMoneyToPrisonerService.checkPaymentServiceAvailable.mockResolvedValue({ available: true })
+
+    return request(app)
+      .get(`/${locale}/payment-choice`)
+      .expect('Content-Type', /html/)
+      .expect(200)
+      .expect(res => {
+        expect(res.text).toContain(heading)
+        expect(res.text).toContain(continueText)
+        expect(res.text).toContain(body)
+      })
+  })
+
+  it('renders the debit card continue button and audits the page view when the payment service is available', () => {
+    sendMoneyToPrisonerService.checkPaymentServiceAvailable.mockResolvedValue({ available: true })
+
+    return request(app)
+      .get(`/${locale}/payment-choice`)
+      .expect('Content-Type', /html/)
+      .expect(200)
+      .expect(res => {
+        expect(res.text).toContain(`href="/${locale}/debit-card/details"`)
+        expect(res.text).not.toContain('service-unavailable-heading')
+        expect(auditService.logPageView).toHaveBeenCalledWith('PAYMENT_CHOICE', {
+          correlationId: expect.any(String),
+          who: ANONYMOUS_USER,
+        })
+      })
+  })
+
+  it('renders the service-unavailable message instead of the continue button when the payment service is down', () => {
+    sendMoneyToPrisonerService.checkPaymentServiceAvailable.mockResolvedValue({
+      available: false,
+      messageToUsers: 'Down for maintenance',
+    })
+
+    return request(app)
+      .get(`/${locale}/payment-choice`)
+      .expect('Content-Type', /html/)
+      .expect(200)
+      .expect(res => {
+        expect(res.text).toContain('service-unavailable-heading')
+        expect(res.text).toContain('Down for maintenance')
+        expect(res.text).not.toContain(`href="/${locale}/debit-card/details"`)
+      })
+  })
+})
+
 describe('GET /:lang/terms with an unsupported prefix', () => {
   it('should 404', () => {
     return request(app).get('/fr/terms').expect(404)
@@ -86,7 +150,7 @@ describe.each([
         expect(res.text).toContain(`href="/${locale}/payment-choice"`)
         expect(res.text).toContain(`href="/${locale}/terms"`)
         expect(res.text).toContain(`href="/${locale}/privacy"`)
-        expect(res.text).toContain(`href="/${locale}/contact-us"`)
+        expect(res.text).toContain(`href="/${locale}/help/"`)
         expect(res.text).toContain('govuk-back-link')
         expect(res.text).toContain('class="app-user-agreement"')
       })
@@ -126,15 +190,45 @@ describe.each([
 })
 
 describe.each([
-  ['en-gb', 'Terms and conditions'],
-  ['cy', 'Y gyfraith sy’n berthnasol'],
-])('GET /%s/terms', (locale, expectedHeading) => {
-  it('renders the translated terms page', () => {
+  ['en-gb', 'Terms and conditions', 'Please read them carefully.'],
+  ['cy', 'Telerau ac amodau', "Darllenwch nhw'n ofalus."],
+])('GET /%s/terms', (locale, expectedHeading, expectedCopy) => {
+  it('renders and audits the terms page with the legacy help link', () => {
     return request(app)
       .get(`/${locale}/terms`)
       .expect('Content-Type', /html/)
       .expect(200)
-      .expect(res => expect(res.text).toContain(expectedHeading))
+      .expect(res => {
+        expect(res.text).toContain(expectedHeading)
+        expect(res.text).toContain(expectedCopy)
+        expect(res.text).toContain('card-acceptance-signage/visa.svg')
+        expect(res.text).toContain('card-acceptance-signage/mastercard.svg')
+        expect(res.text).toContain('card-acceptance-signage/maestro.svg')
+        expect(res.text).toContain(`href="/${locale}/help/"`)
+        expect(auditService.logPageView).toHaveBeenCalledWith(
+          Page.TERMS,
+          expect.objectContaining({ who: ANONYMOUS_USER }),
+        )
+      })
+  })
+})
+
+describe.each([
+  ['en-gb', 'Help'],
+  ['cy', 'Cymorth'],
+])('GET /%s/help/', (locale, expectedHeading) => {
+  it('renders and audits the help placeholder', () => {
+    return request(app)
+      .get(`/${locale}/help/`)
+      .expect('Content-Type', /html/)
+      .expect(200)
+      .expect(res => {
+        expect(res.text).toContain(expectedHeading)
+        expect(auditService.logPageView).toHaveBeenCalledWith(
+          Page.HELP,
+          expect.objectContaining({ who: ANONYMOUS_USER }),
+        )
+      })
   })
 })
 
@@ -142,17 +236,16 @@ describe.each([
   ['en-gb', 'Cookies'],
   ['cy', 'Cwcis'],
 ])('GET /%s/cookies', (locale, expectedHeading) => {
-  it('renders the cookies placeholder page and audits the page view', () => {
+  it('renders the cookies page listing only the session cookie', () => {
     return request(app)
       .get(`/${locale}/cookies`)
       .expect('Content-Type', /html/)
       .expect(200)
       .expect(res => {
         expect(res.text).toContain(expectedHeading)
-        expect(auditService.logPageView).toHaveBeenCalledWith('COOKIES', {
-          correlationId: expect.any(String),
-          who: ANONYMOUS_USER,
-        })
+        expect(res.text).toContain('smtp.session')
+        expect(res.text).not.toContain('Google Analytics')
+        expect(res.text).not.toContain('_ga')
       })
   })
 })
@@ -212,7 +305,7 @@ describe.each([
         expect(res.text).toContain(`href="/${locale}/privacy"`)
         expect(res.text).toContain(`href="/${locale}/cookies"`)
         expect(res.text).toContain(`href="/${locale}/accessibility"`)
-        expect(res.text).toContain(`href="/${locale}/help"`)
+        expect(res.text).toContain(`href="/${locale}/help/"`)
         expect(res.text).toContain('href="https://mojdigital.blog.gov.uk/"')
         expect(res.text).toContain('Open Government Licence v3.0')
         expect(res.text).toContain('© Crown copyright')
@@ -399,9 +492,9 @@ describe('language route test', () => {
 
   it('falls back to the default language when a translation key is missing', async () => {
     await i18next.loadNamespaces('translation')
-    // 'terms.pageTitle' only exists in the en-gb translation, so the cy-fixed
-    // translator should fall back to the English value rather than the key itself
-    expect(i18next.getFixedT('cy')('prisonerDetails.whatToDoHeading')).toBe('What to do:')
+    // a key that only exists in en-gb should fall back to the English value rather than the key itself
+    i18next.addResource('en-gb', 'translation', 'test.englishOnly', 'English only')
+    expect(i18next.getFixedT('cy')('test.englishOnly')).toBe('English only')
   })
 
   it('404s for an unsupported language prefix', () => {

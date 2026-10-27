@@ -18,6 +18,7 @@ type PrisonerDetailsMessages = {
   prisonerNumberLabel: string
   prisonerNumberFormat: string
   prisonerNameCardNumber: string
+  prisonerNameMaxLength: string
   dobDayNumber: string
   dobDayRange: string
   dobMonthNumber: string
@@ -35,6 +36,7 @@ const messages: Record<Locale, PrisonerDetailsMessages> = {
     prisonerNumberLabel: 'Prisoner number',
     prisonerNumberFormat: 'Incorrect prisoner number format',
     prisonerNameCardNumber: 'Please do not enter your debit card number here',
+    prisonerNameMaxLength: 'You’ve entered too many characters',
     dobDayNumber: 'Enter ‘day’ as a number',
     dobDayRange: '‘Day’ should be between 1 and 31',
     dobMonthNumber: 'Enter ‘month’ as a number',
@@ -50,6 +52,7 @@ const messages: Record<Locale, PrisonerDetailsMessages> = {
     prisonerNumberLabel: 'Rhif y carcharor',
     prisonerNumberFormat: 'Fformat anghywir ar gyfer rhif y carcharor',
     prisonerNameCardNumber: 'Peidiwch â nodi rhif eich cerdyn debyd yma',
+    prisonerNameMaxLength: 'Rydych wedi nodi gormod o nodau',
     dobDayNumber: 'Nodwch ‘diwrnod’ fel rhif',
     dobDayRange: 'Dylai ‘Diwrnod’ fod rhwng 1 a 31',
     dobMonthNumber: 'Nodwch ‘mis’ fel rhif',
@@ -117,6 +120,24 @@ describe.each<Locale>(['en-gb', 'cy'])('validatePrisonerDetails (%s)', locale =>
       const result = validatePrisonerDetails({ ...validFormValues, prisonerName: 'Flat 12 34 Smith' })
 
       expect(result.errors.prisonerName).toBeUndefined()
+    })
+
+    it('returns no error when the name is exactly 250 characters', () => {
+      const result = validatePrisonerDetails({ ...validFormValues, prisonerName: 'a'.repeat(250) })
+
+      expect(result.errors.prisonerName).toBeUndefined()
+    })
+
+    it('returns a max length error when the name is over 250 characters', () => {
+      const longName = 'a'.repeat(251)
+      const result = validatePrisonerDetails({ ...validFormValues, prisonerName: longName })
+
+      expect(result.errors.prisonerName).toBe(expected.prisonerNameMaxLength)
+      expect(result.errorList).toContainEqual({
+        label: expected.prisonerNameLabel,
+        href: '#id_prisoner_name',
+        messages: [expected.prisonerNameMaxLength],
+      })
     })
   })
 

@@ -30,6 +30,8 @@ const prisonerNumberRegex = /^[a-zA-Z]\d{4}[a-zA-Z]{2}$/
 
 const cardNumberRegex = /\d{4}\s*\d{4}\s*\d{4}\s*\d{4}/
 
+const PRISONER_NAME_MAX_LENGTH = 250
+
 function isValidDate(day: number, month: number, year: number): boolean {
   const date = new Date(year, month - 1, day)
   return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
@@ -86,6 +88,8 @@ export function validatePrisonerDetails(
     errors.prisonerName = t('prisonerDetails.errors.required')
   } else if (cardNumberRegex.test(formValues.prisonerName)) {
     errors.prisonerName = t('prisonerDetails.errors.prisonerNameCardNumber')
+  } else if (formValues.prisonerName.length > PRISONER_NAME_MAX_LENGTH) {
+    errors.prisonerName = t('prisonerDetails.errors.prisonerNameMaxLength')
   }
 
   const prisonerDobErrors = validatePrisonerDob(formValues, t)

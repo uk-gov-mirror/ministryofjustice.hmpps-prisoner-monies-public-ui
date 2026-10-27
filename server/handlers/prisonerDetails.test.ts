@@ -1,9 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import {
-  prisonerDetailsGetHandler,
-  prisonerDetailsPostHandler,
-  PRISONER_DETAILS_BACK_LINK_HREF,
-} from './prisonerDetails'
+import { prisonerDetailsGetHandler, prisonerDetailsPostHandler } from './prisonerDetails'
 import SendMoneyToPrisonerService from '../services/sendMoneyToPrisonerService'
 import { debitCardPaths } from '../constants/paths'
 
@@ -34,7 +30,6 @@ describe('prisonerDetailsGetHandler', () => {
     prisonerDetailsGetHandler(req, res as unknown as Response, next)
 
     expect(render).toHaveBeenCalledWith('pages/prisoner-details', {
-      backLinkHref: PRISONER_DETAILS_BACK_LINK_HREF,
       postDebitCardDetails: res.locals.localePath(debitCardPaths.PRISONER_DETAILS),
       errors: {},
       errorList: [],
@@ -64,7 +59,7 @@ describe('prisonerDetailsPostHandler', () => {
 
     expect(render).toHaveBeenCalledWith(
       'pages/prisoner-details',
-      expect.objectContaining({ backLinkHref: PRISONER_DETAILS_BACK_LINK_HREF }),
+      expect.objectContaining({ postDebitCardDetails: res.locals.localePath(debitCardPaths.PRISONER_DETAILS) }),
     )
     expect(sendMoneyToPrisonerService.getValidPrisoner).not.toHaveBeenCalled()
     expect(redirect).not.toHaveBeenCalled()
@@ -138,7 +133,6 @@ describe('prisonerDetailsPostHandler', () => {
     await handler(req, res as unknown as Response, next)
 
     expect(render).toHaveBeenCalledWith('pages/prisoner-details', {
-      backLinkHref: PRISONER_DETAILS_BACK_LINK_HREF,
       postDebitCardDetails: res.locals.localePath(debitCardPaths.PRISONER_DETAILS),
       errors: {},
       errorList: [],

@@ -51,6 +51,7 @@ services:
       - CLIENT_CREDS_CLIENT_ID=hmpps-typescript-template-system
       - CLIENT_CREDS_CLIENT_SECRET=clientsecret
       - SESSION_SECRET=somesecretvalue
+      - PRISONER_SEARCH_API_URL=http://host.docker.internal:8082
       - TOKEN_VERIFICATION_API_URL=http://hmpps-auth:8080/auth
       - TOKEN_VERIFICATION_ENABLED=false
       - INGRESS_URL=http://localhost:3000

@@ -11,8 +11,6 @@ export type PrisonerDetailsFormInput = {
 }
 
 export default class PrisonerDetailsPage extends BasePage {
-  readonly backLink: Locator
-
   readonly errorSummary: Locator
 
   readonly prisonerNameInput: Locator
@@ -37,7 +35,6 @@ export default class PrisonerDetailsPage extends BasePage {
 
   private constructor(page: Page) {
     super(page)
-    this.backLink = page.getByRole('link', { name: 'Back' })
     this.prisonerNameInput = page.locator('#id_prisoner_name')
     this.prisonerDobDayInput = page.locator('#id_prisoner_dob_0')
     this.prisonerDobMonthInput = page.locator('#id_prisoner_dob_1')

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import paymentChoiceGetHandler from './paymentChoice'
 import SendMoneyToPrisonerService from '../services/sendMoneyToPrisonerService'
-import { paths, debitCardPaths } from '../constants/paths'
+import { debitCardPaths } from '../constants/paths'
 import makeRes from '../testutils/mockResponse'
 
 jest.mock('../services/sendMoneyToPrisonerService')
@@ -25,7 +25,6 @@ describe('paymentChoiceGetHandler', () => {
     await paymentChoiceGetHandler(sendMoneyToPrisonerService)(req, res as unknown as Response, jest.fn())
 
     expect(render).toHaveBeenCalledWith('pages/payment-choice', {
-      backLinkHref: res.locals.localePath(paths.BEFORE_YOU_CONTINUE),
       continueUrl: res.locals.localePath(debitCardPaths.PRISONER_DETAILS),
       serviceAvailable: true,
       serviceUnavailableMessage: undefined,
@@ -43,7 +42,6 @@ describe('paymentChoiceGetHandler', () => {
     await paymentChoiceGetHandler(sendMoneyToPrisonerService)(req, res as unknown as Response, jest.fn())
 
     expect(render).toHaveBeenCalledWith('pages/payment-choice', {
-      backLinkHref: res.locals.localePath(paths.BEFORE_YOU_CONTINUE),
       continueUrl: res.locals.localePath(debitCardPaths.PRISONER_DETAILS),
       serviceAvailable: false,
       serviceUnavailableMessage: 'Down for maintenance',

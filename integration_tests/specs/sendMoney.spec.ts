@@ -58,12 +58,6 @@ test.describe('Send money journey', () => {
     await PrisonerDetailsPage.verifyOnPage(page)
   })
 
-  test('Enter prisoner details page is reachable and has a back link', async ({ page }) => {
-    const prisonerDetailsPage = await PrisonerDetailsPage.goTo(page)
-
-    await expect(prisonerDetailsPage.backLink).toBeVisible()
-  })
-
   test('Submitting an empty form shows the error summary (with field links) and an inline error message for every field', async ({
     page,
   }) => {

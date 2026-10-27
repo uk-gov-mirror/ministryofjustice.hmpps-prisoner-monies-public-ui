@@ -2,12 +2,10 @@ import type { RequestHandler } from 'express'
 import SendMoneyToPrisonerService from '../services/sendMoneyToPrisonerService'
 import {
   validatePrisonerDetails,
-  prisonerNotFoundResult,
   PrisonerDetailsFormValues,
+  prisonerNotFoundResult,
 } from '../utils/prisonerDetailsValidation'
-import { paths, debitCardPaths } from '../constants/paths'
-
-export const PRISONER_DETAILS_BACK_LINK_HREF = paths.PAYMENT_CHOICE
+import { debitCardPaths } from '../constants/paths'
 
 function extractPrisonerDetailsFormValues(body: Record<string, string>): PrisonerDetailsFormValues {
   return {
@@ -40,7 +38,6 @@ function renderPrisonerDetails(
   { errors, errorList }: ReturnType<typeof validatePrisonerDetails> = { errors: {}, errorList: [] },
 ) {
   return res.render('pages/prisoner-details', {
-    backLinkHref: res.locals.localePath(PRISONER_DETAILS_BACK_LINK_HREF),
     postDebitCardDetails: res.locals.localePath(debitCardPaths.PRISONER_DETAILS),
     errors,
     errorList,
